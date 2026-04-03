@@ -195,6 +195,32 @@
     .check { color: #4caf6e; }
     .dash { color: #444; }
 
+    /* CLICKABLE TL NAME */
+    .tl-name-btn {
+      cursor: pointer;
+      color: #5b9cf6;
+      text-decoration: underline dotted;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .tl-name-btn:hover { color: #8bbfff; }
+
+    /* TL POLE MARKER ON MAP */
+    .tl-pole-marker {
+      width: 22px; height: 22px;
+      background: #5b9cf6;
+      border: 2px solid #fff;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 0 0 rgba(91,156,246,0.7);
+      animation: tlpulse 1.8s infinite;
+    }
+    @keyframes tlpulse {
+      0%   { box-shadow: 0 0 0 0 rgba(91,156,246,0.7); }
+      70%  { box-shadow: 0 0 0 12px rgba(91,156,246,0); }
+      100% { box-shadow: 0 0 0 0 rgba(91,156,246,0); }
+    }
+
     /* FILES */
     .file-btn {
       display: flex;
@@ -298,6 +324,7 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="data.js"></script>
+  <script src="tl_coords.js"></script>
   <script>
     // ── MAP SETUP ──────────────────────────────────────────────────
     const map = L.map('map', { zoomControl: true }).setView([41.7033, 44.8054], 14);
@@ -329,8 +356,32 @@
       marker.on('click', () => { openSidebar(inter); map.setView([inter.lat, inter.lng], 17); });
     });
 
+    // ── TRAFFIC LIGHT LOCATOR ──────────────────────────────────────
+    let activeTLMarker = null;
+
+    function showTrafficLight(name) {
+      if (activeTLMarker) { map.removeLayer(activeTLMarker); activeTLMarker = null; }
+      const coord = TL_COORDS[name.toUpperCase()];
+      if (!coord) return;
+
+      const icon = L.divIcon({
+        html: `<div class="tl-pole-marker"></div>`,
+        className: '',
+        iconSize: [22, 22],
+        iconAnchor: [11, 11]
+      });
+
+      activeTLMarker = L.marker([coord.lat, coord.lng], { icon })
+        .bindPopup(`<b style="color:#5b9cf6">${name}</b><br><span style="font-size:0.75rem">${coord.lat.toFixed(6)}, ${coord.lng.toFixed(6)}</span>`)
+        .addTo(map)
+        .openPopup();
+
+      map.setView([coord.lat, coord.lng], 19);
+    }
+
     // ── SIDEBAR ────────────────────────────────────────────────────
     function openSidebar(inter) {
+      if (activeTLMarker) { map.removeLayer(activeTLMarker); activeTLMarker = null; }
       const sidebar = document.getElementById('sidebar');
       sidebar.classList.remove('hidden');
       document.getElementById('sidebarContent').innerHTML = buildSidebar(inter);
@@ -380,7 +431,7 @@
 
       const lights = i.trafficLights.map(tl => `
         <tr>
-          <td style="text-align:left;font-weight:600;white-space:nowrap;">${tl.name}</td>
+          <td style="text-align:left;"><span class="tl-name-btn" onclick="showTrafficLight('${tl.name}')" title="Click to locate on map">${tl.name}</span></td>
           <td>${v(tl.diameter)}</td>
           <td>${v(tl.height)}</td>
           <td>${v(tl.length)}</td>
