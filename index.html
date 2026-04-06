@@ -341,8 +341,11 @@
     document.getElementById('statOp').textContent = INTERSECTIONS.filter(i => i.status === 'Fully Operational').length;
 
     INTERSECTIONS.forEach(inter => {
-      const statusClass = inter.status === 'Fully Operational' ? 'operational'
-                        : inter.status === 'Partially Operational' ? 'partial' : 'inactive';
+      const s = inter.status.toLowerCase();
+      const hasMissingTL = inter.trafficLights.some(tl => !TL_COORDS[tl.name.toUpperCase()]);
+      const statusClass = (inter.lat === 0 || inter.lng === 0 || hasMissingTL) ? 'inactive'
+                        : s === 'fully operational' ? 'operational'
+                        : s === 'partially operational' ? 'partial' : 'inactive';
 
       const icon = L.divIcon({
         html: `<div class="custom-marker ${statusClass}">${inter.code.split('-')[1]}</div>`,
