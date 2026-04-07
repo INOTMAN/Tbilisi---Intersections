@@ -361,11 +361,63 @@
 
     // ── TRAFFIC LIGHT LOCATOR ──────────────────────────────────────
     let activeTLMarker = null;
+    let intersectionTLMarkers = [];
+
+    function clearIntersectionTLMarkers() {
+      intersectionTLMarkers.forEach(m => map.removeLayer(m));
+      intersectionTLMarkers = [];
+    }
+
+    function tlPopupHTML(tl, coord) {
+      const f = (v) => (v && v !== '0') ? v : '—';
+      const c = (v) => (v && v !== '0') ? '✔' : '—';
+      return `
+        <div style="font-family:'Inter',sans-serif;min-width:220px;">
+          <div style="font-size:1rem;font-weight:800;color:#5b9cf6;margin-bottom:6px;">${tl.name}</div>
+          <table style="width:100%;border-collapse:collapse;font-size:0.78rem;">
+            <tr><td style="color:#888;padding:2px 6px 2px 0">Diameter</td><td style="font-weight:600">${f(tl.diameter)}</td><td style="color:#888;padding:2px 6px 2px 8px">Height</td><td style="font-weight:600">${f(tl.height)} m</td></tr>
+            <tr><td style="color:#888;padding:2px 6px 2px 0">Traffic sig.</td><td style="font-weight:600">${f(tl.traffic)}</td><td style="color:#888;padding:2px 6px 2px 8px">Pedestrian</td><td style="font-weight:600">${f(tl.pedestrian)}</td></tr>
+            <tr><td style="color:#888;padding:2px 6px 2px 0">Cycling</td><td style="font-weight:600">${c(tl.cycling)}</td><td style="color:#888;padding:2px 6px 2px 8px">Countdown</td><td style="font-weight:600">${c(tl.countdown)}</td></tr>
+            <tr><td style="color:#888;padding:2px 6px 2px 0">Camera</td><td style="font-weight:600">${c(tl.camera)}</td><td style="color:#888;padding:2px 6px 2px 8px">Detector</td><td style="font-weight:600">${c(tl.detector)}</td></tr>
+            <tr><td style="color:#888;padding:2px 6px 2px 0">Acoustic</td><td style="font-weight:600">${c(tl.acoustic)}</td><td style="color:#888;padding:2px 6px 2px 8px">Button</td><td style="font-weight:600">${c(tl.button)}</td></tr>
+            <tr><td style="color:#888;padding:2px 6px 2px 0">Sunshade</td><td style="font-weight:600">${f(tl.sunshade)}</td><td style="color:#888;padding:2px 6px 2px 8px">Bus sig.</td><td style="font-weight:600">${c(tl.bus)}</td></tr>
+            ${tl.note ? `<tr><td colspan="4" style="color:#aaa;padding-top:4px;font-style:italic">${tl.note}</td></tr>` : ''}
+          </table>
+          <div style="color:#666;font-size:0.65rem;margin-top:6px">${coord.lat.toFixed(6)}, ${coord.lng.toFixed(6)}</div>
+        </div>`;
+    }
+
+    function showAllTLMarkers(inter) {
+      clearIntersectionTLMarkers();
+      if (activeTLMarker) { map.removeLayer(activeTLMarker); activeTLMarker = null; }
+      inter.trafficLights.forEach(tl => {
+        const coord = TL_COORDS[tl.name.toUpperCase()];
+        if (!coord) return;
+        const icon = L.divIcon({
+          html: `<div class="tl-pole-marker" title="${tl.name}"></div>`,
+          className: '',
+          iconSize: [22, 22],
+          iconAnchor: [11, 11]
+        });
+        const m = L.marker([coord.lat, coord.lng], { icon })
+          .bindPopup(tlPopupHTML(tl, coord), { maxWidth: 280 })
+          .addTo(map);
+        intersectionTLMarkers.push(m);
+      });
+    }
 
     function showTrafficLight(name) {
       if (activeTLMarker) { map.removeLayer(activeTLMarker); activeTLMarker = null; }
       const coord = TL_COORDS[name.toUpperCase()];
       if (!coord) return;
+
+      // Find TL data from current intersection markers
+      let tlData = { name };
+      intersectionTLMarkers.forEach((m, i) => {
+        if (m.getLatLng().lat === coord.lat && m.getLatLng().lng === coord.lng) {
+          tlData = m._popup ? null : tlData;
+        }
+      });
 
       const icon = L.divIcon({
         html: `<div class="tl-pole-marker"></div>`,
@@ -374,17 +426,27 @@
         iconAnchor: [11, 11]
       });
 
+      // Find the existing marker and just open its popup + zoom
+      for (const m of intersectionTLMarkers) {
+        const ll = m.getLatLng();
+        if (ll.lat === coord.lat && ll.lng === coord.lng) {
+          map.setView([coord.lat, coord.lng], 19);
+          m.openPopup();
+          return;
+        }
+      }
+
+      // Fallback if marker not in current set
       activeTLMarker = L.marker([coord.lat, coord.lng], { icon })
         .bindPopup(`<b style="color:#5b9cf6">${name}</b><br><span style="font-size:0.75rem">${coord.lat.toFixed(6)}, ${coord.lng.toFixed(6)}</span>`)
         .addTo(map)
         .openPopup();
-
       map.setView([coord.lat, coord.lng], 19);
     }
 
     // ── SIDEBAR ────────────────────────────────────────────────────
     function openSidebar(inter) {
-      if (activeTLMarker) { map.removeLayer(activeTLMarker); activeTLMarker = null; }
+      showAllTLMarkers(inter);
       const sidebar = document.getElementById('sidebar');
       sidebar.classList.remove('hidden');
       document.getElementById('sidebarContent').innerHTML = buildSidebar(inter);
@@ -392,6 +454,8 @@
     }
 
     function closeSidebar() {
+      clearIntersectionTLMarkers();
+      if (activeTLMarker) { map.removeLayer(activeTLMarker); activeTLMarker = null; }
       document.getElementById('sidebar').classList.add('hidden');
     }
 
