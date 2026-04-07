@@ -207,18 +207,13 @@
 
     /* TL POLE MARKER ON MAP */
     .tl-pole-marker {
-      width: 22px; height: 22px;
-      background: #5b9cf6;
-      border: 2px solid #fff;
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 0 0 0 rgba(91,156,246,0.7);
+      width: 24px; height: 36px;
+      filter: drop-shadow(0 0 4px rgba(91,156,246,0.8));
       animation: tlpulse 1.8s infinite;
     }
     @keyframes tlpulse {
-      0%   { box-shadow: 0 0 0 0 rgba(91,156,246,0.7); }
-      70%  { box-shadow: 0 0 0 12px rgba(91,156,246,0); }
-      100% { box-shadow: 0 0 0 0 rgba(91,156,246,0); }
+      0%,100% { filter: drop-shadow(0 0 3px rgba(91,156,246,0.6)); }
+      50%     { filter: drop-shadow(0 0 8px rgba(91,156,246,1)); }
     }
 
     /* FILES */
@@ -394,10 +389,10 @@
         const coord = TL_COORDS[tl.name.toUpperCase()];
         if (!coord) return;
         const icon = L.divIcon({
-          html: `<div class="tl-pole-marker" title="${tl.name}"></div>`,
+          html: `<div class="tl-pole-marker"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 36" width="24" height="36"><rect x="4" y="2" width="16" height="26" rx="3" fill="#1a1a2e" stroke="#5b9cf6" stroke-width="1.5"/><circle cx="12" cy="8" r="3.5" fill="#f44336"/><circle cx="12" cy="17" r="3.5" fill="#ffb300"/><circle cx="12" cy="26" r="3.5" fill="#4caf50"/><rect x="10" y="28" width="4" height="5" fill="#5b9cf6"/><rect x="7" y="32" width="10" height="2" rx="1" fill="#5b9cf6"/></svg></div>`,
           className: '',
-          iconSize: [22, 22],
-          iconAnchor: [11, 11]
+          iconSize: [24, 36],
+          iconAnchor: [12, 36]
         });
         const m = L.marker([coord.lat, coord.lng], { icon })
           .bindPopup(tlPopupHTML(tl, coord), { maxWidth: 280 })
@@ -420,7 +415,7 @@
       });
 
       const icon = L.divIcon({
-        html: `<div class="tl-pole-marker"></div>`,
+        html: `<div class="tl-pole-marker"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 36" width="24" height="36"><rect x="4" y="2" width="16" height="26" rx="3" fill="#1a1a2e" stroke="#5b9cf6" stroke-width="1.5"/><circle cx="12" cy="8" r="3.5" fill="#f44336"/><circle cx="12" cy="17" r="3.5" fill="#ffb300"/><circle cx="12" cy="26" r="3.5" fill="#4caf50"/><rect x="10" y="28" width="4" height="5" fill="#5b9cf6"/><rect x="7" y="32" width="10" height="2" rx="1" fill="#5b9cf6"/></svg></div>`,
         className: '',
         iconSize: [22, 22],
         iconAnchor: [11, 11]
