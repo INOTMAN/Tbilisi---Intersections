@@ -6,35 +6,34 @@
   <title>Tbilisi Intersections Inventory</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>if(sessionStorage.getItem('mapEntered')==='1')document.documentElement.classList.add('skip-welcome-early');</script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Inter', sans-serif; background: #0f1a12; color: #eee; height: 100vh; display: flex; flex-direction: column; }
+    body { font-family: 'Inter', sans-serif; background: #111; color: #eee; height: 100vh; display: flex; flex-direction: column; }
 
     /* HEADER */
     .header {
-      background: #0f1a12;
-      border-bottom: 2px solid #2d7a4f;
+      background: #111;
+      border-bottom: 3px solid #000;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.8);
       padding: 0.8rem 1.5rem;
       display: flex;
       align-items: center;
       gap: 1rem;
       z-index: 1000;
     }
-    .header-logo { font-size: 1.3rem; font-weight: 800; color: #4caf6e; letter-spacing: -0.02em; }
-    .header-logo span { color: #c8e000; }
-    .header-sub { font-size: 0.75rem; color: #888; margin-top: 0.1rem; }
-    .header-stats {
-      margin-left: auto;
-      display: flex;
-      gap: 1.5rem;
-    }
+    .header-logo { font-size: 1.3rem; font-weight: 800; color: #43a047; letter-spacing: -0.02em; }
+    .header-logo span { color: #fdd835; }
+    .header-sub { font-size: 0.75rem; color: #777; margin-top: 0.1rem; }
+    .header-stats { margin-left: auto; display: flex; gap: 1.5rem; }
     .stat { text-align: center; }
-    .stat-num { font-size: 1.2rem; font-weight: 800; color: #c8e000; }
-    .stat-label { font-size: 0.6rem; color: #888; text-transform: uppercase; letter-spacing: 0.1em; }
+    .stat-num { font-size: 1.2rem; font-weight: 800; color: #fdd835; }
+    .stat-label { font-size: 0.6rem; color: #777; text-transform: uppercase; letter-spacing: 0.1em; }
 
     /* LAYOUT */
-    .main { display: flex; flex: 1; overflow: hidden; }
+    .main { display: flex; flex: 1; overflow: hidden; position: relative; }
 
     /* MAP */
     #map { flex: 1; height: 100%; }
@@ -42,8 +41,8 @@
     /* SIDEBAR */
     .sidebar {
       width: 520px;
-      background: #141f16;
-      border-left: 2px solid #2d7a4f;
+      background: #1a1a1a;
+      border-left: 3px solid #e53935;
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -52,9 +51,9 @@
     .sidebar.hidden { width: 0; border: none; }
 
     .sidebar-header {
-      background: #1a2e1e;
+      background: #222;
       padding: 1rem 1.2rem;
-      border-bottom: 1px solid #2d7a4f;
+      border-bottom: 1px solid #333;
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
@@ -65,32 +64,24 @@
       font-weight: 700;
       letter-spacing: 0.15em;
       text-transform: uppercase;
-      color: #c8e000;
+      color: #fdd835;
       margin-bottom: 0.3rem;
     }
-    .sidebar-name {
-      font-size: 0.95rem;
-      font-weight: 700;
-      color: #fff;
-      line-height: 1.3;
-    }
+    .sidebar-name { font-size: 0.95rem; font-weight: 700; color: #fff; line-height: 1.3; }
     .sidebar-close {
       background: none;
-      border: 1px solid #444;
-      color: #aaa;
+      border: 1px solid #e53935;
+      color: #e53935;
       border-radius: 6px;
       padding: 0.3rem 0.6rem;
       cursor: pointer;
       font-size: 0.85rem;
       white-space: nowrap;
+      transition: all 0.2s;
     }
-    .sidebar-close:hover { background: #333; color: #fff; }
+    .sidebar-close:hover { background: #e53935; color: #fff; }
 
-    .sidebar-tabs {
-      display: flex;
-      background: #0f1a12;
-      border-bottom: 1px solid #2d4a2f;
-    }
+    .sidebar-tabs { display: flex; background: #111; border-bottom: 1px solid #2a2a2a; }
     .stab {
       flex: 1;
       padding: 0.6rem 0.4rem;
@@ -99,26 +90,26 @@
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      color: #777;
+      color: #666;
       cursor: pointer;
       border-bottom: 2px solid transparent;
       transition: all 0.2s;
     }
-    .stab.active { color: #c8e000; border-bottom-color: #c8e000; }
+    .stab.active { color: #fdd835; border-bottom-color: #fdd835; }
     .stab:hover { color: #eee; }
 
     .sidebar-body { flex: 1; overflow-y: auto; padding: 1rem; }
     .sidebar-body::-webkit-scrollbar { width: 4px; }
-    .sidebar-body::-webkit-scrollbar-track { background: #141f16; }
-    .sidebar-body::-webkit-scrollbar-thumb { background: #2d7a4f; border-radius: 2px; }
+    .sidebar-body::-webkit-scrollbar-track { background: #1a1a1a; }
+    .sidebar-body::-webkit-scrollbar-thumb { background: #e53935; border-radius: 2px; }
 
     .tab-panel { display: none; }
     .tab-panel.active { display: block; }
 
     /* INFO CARDS */
     .info-card {
-      background: #1a2e1e;
-      border: 1px solid #2d4a2f;
+      background: #222;
+      border: 1px solid #333;
       border-radius: 10px;
       padding: 1rem;
       margin-bottom: 0.75rem;
@@ -128,7 +119,7 @@
       font-weight: 700;
       letter-spacing: 0.15em;
       text-transform: uppercase;
-      color: #4caf6e;
+      color: #43a047;
       margin-bottom: 0.6rem;
     }
     .info-row {
@@ -136,84 +127,96 @@
       justify-content: space-between;
       align-items: center;
       padding: 0.3rem 0;
-      border-bottom: 1px solid #243828;
+      border-bottom: 1px solid #2a2a2a;
       font-size: 0.8rem;
     }
     .info-row:last-child { border-bottom: none; }
     .info-key { color: #888; }
     .info-val { color: #eee; font-weight: 500; text-align: right; max-width: 60%; }
 
-    .badge {
-      display: inline-block;
-      padding: 0.15rem 0.5rem;
-      border-radius: 4px;
-      font-size: 0.65rem;
-      font-weight: 700;
-    }
-    .badge-green { background: #1a4a2a; color: #4caf6e; }
-    .badge-yellow { background: #2a2a00; color: #c8e000; }
-    .badge-blue { background: #0a1a3a; color: #5b9cf6; }
+    .badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.65rem; font-weight: 700; }
+    .badge-green { background: #1b3a1c; color: #43a047; }
+    .badge-yellow { background: #2a2200; color: #fdd835; }
+    .badge-blue { background: #3a1a1a; color: #e53935; }
+
+    /* APPROACH DIAGRAM */
+    .appr-diagram { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 1rem; }
+    .appr-card { background: #111; border: 1px solid #2a2a2a; border-radius: 8px; padding: 0.5rem 0.7rem; min-width: 90px; }
+    .appr-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem; }
+    .appr-card-num { font-size: 0.65rem; color: #555; font-weight: 700; }
+    .appr-card-dir { font-size: 0.65rem; padding: 1px 5px; border-radius: 3px; font-weight: 700; }
+    .appr-dir-i  { background: #1a3a1a; color: #43a047; }
+    .appr-dir-o  { background: #3a1a1a; color: #e53935; }
+    .appr-dir-io { background: #1a2a3a; color: #42a5f5; }
+    .appr-lanes { display: flex; gap: 3px; flex-wrap: wrap; }
+    .appr-lane { width: 26px; height: 34px; background: #1e1e1e; border: 1px solid #333; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 1rem; }
 
     /* APPROACHES TABLE */
     .approaches-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; margin-top: 0.5rem; }
     .approaches-table th {
-      background: #0f1a12;
-      color: #4caf6e;
+      background: #111;
+      color: #43a047;
       padding: 0.4rem 0.5rem;
       text-align: left;
       font-size: 0.6rem;
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      border-bottom: 1px solid #2d4a2f;
+      border-bottom: 1px solid #333;
     }
-    .approaches-table td {
-      padding: 0.4rem 0.5rem;
-      border-bottom: 1px solid #1e3020;
-      color: #ccc;
-    }
+    .approaches-table td { padding: 0.4rem 0.5rem; border-bottom: 1px solid #1e1e1e; color: #ccc; }
     .approaches-table tr:last-child td { border-bottom: none; }
-    .approaches-table tr:hover td { background: #1a2e1e; }
+    .approaches-table tr:hover td { background: #222; }
 
     /* TRAFFIC LIGHTS TABLE */
+    .appr-full-card { background:#1a1a1a; border:1px solid #222; border-left:3px solid #e53935; border-radius:10px; padding:1rem 1.2rem; margin-bottom:0.8rem; }
+    .appr-full-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:0.8rem; }
+    .appr-full-num { font-size:0.9rem; font-weight:800; color:#fdd835; }
+    .appr-popup-grid { display:grid; grid-template-columns:1fr 1fr; gap:0.5rem 1rem; }
+    .appr-popup-row { display:flex; flex-direction:column; }
+    .appr-popup-label { font-size:0.62rem; color:#555; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:0.15rem; }
+    .appr-popup-val { font-size:0.85rem; color:#eee; font-weight:600; }
+    .appr-popup-val.empty { color:#333; }
+    .appr-popup-section { font-size:0.6rem; font-weight:700; text-transform:uppercase; letter-spacing:0.12em; color:#e53935; margin:0.8rem 0 0.4rem; grid-column:1/-1; border-top:1px solid #222; padding-top:0.6rem; }
     .tl-table { width: 100%; border-collapse: collapse; font-size: 0.72rem; }
+    .tl-table th span.gl, .approaches-table th span.gl { cursor: pointer; border-bottom: 1px dashed #555; }
+    .tl-table th span.gl:hover, .approaches-table th span.gl:hover { color: #fff; border-bottom-color: #fdd835; }
     .tl-table th {
-      background: #0f1a12;
-      color: #c8e000;
+      background: #111;
+      color: #fdd835;
       padding: 0.35rem 0.4rem;
       text-align: center;
       font-size: 0.55rem;
       text-transform: uppercase;
-      border-bottom: 1px solid #2d4a2f;
+      border-bottom: 1px solid #333;
     }
-    .tl-table td {
-      padding: 0.35rem 0.4rem;
-      border-bottom: 1px solid #1e3020;
-      color: #ccc;
-      text-align: center;
-    }
+    .tl-table td { padding: 0.35rem 0.4rem; border-bottom: 1px solid #1e1e1e; color: #ccc; text-align: center; }
     .tl-table tr:last-child td { border-bottom: none; }
-    .check { color: #4caf6e; }
+    .check { color: #43a047; }
     .dash { color: #444; }
 
     /* CLICKABLE TL NAME */
     .tl-name-btn {
       cursor: pointer;
-      color: #5b9cf6;
+      color: #e53935;
       text-decoration: underline dotted;
       font-weight: 700;
       white-space: nowrap;
     }
-    .tl-name-btn:hover { color: #8bbfff; }
+    .tl-name-btn:hover { color: #ff6b6b; }
 
     /* TL POLE MARKER ON MAP */
     .tl-pole-marker {
       width: 24px; height: 36px;
-      filter: drop-shadow(0 0 4px rgba(91,156,246,0.8));
+      filter: drop-shadow(0 0 4px rgba(253,216,53,0.9));
       animation: tlpulse 1.8s infinite;
     }
+    @keyframes searchpulse {
+      0%,100% { box-shadow: 0 0 8px rgba(57,255,20,0.4), inset 0 0 6px rgba(57,255,20,0.1); }
+      50%      { box-shadow: 0 0 18px rgba(57,255,20,0.9), inset 0 0 10px rgba(57,255,20,0.2); }
+    }
     @keyframes tlpulse {
-      0%,100% { filter: drop-shadow(0 0 3px rgba(91,156,246,0.6)); }
-      50%     { filter: drop-shadow(0 0 8px rgba(91,156,246,1)); }
+      0%,100% { filter: drop-shadow(0 0 3px rgba(67,160,71,0.7)); }
+      50%     { filter: drop-shadow(0 0 9px rgba(253,216,53,1)); }
     }
 
     /* FILES */
@@ -221,8 +224,8 @@
       display: flex;
       align-items: center;
       gap: 0.75rem;
-      background: #1a2e1e;
-      border: 1px solid #2d4a2f;
+      background: #222;
+      border: 1px solid #333;
       border-radius: 8px;
       padding: 0.75rem 1rem;
       margin-bottom: 0.5rem;
@@ -230,32 +233,22 @@
       color: #eee;
       transition: all 0.2s;
     }
-    .file-btn:hover { background: #243828; border-color: #4caf6e; }
+    .file-btn:hover { background: #2a2a2a; border-color: #43a047; }
     .file-icon { font-size: 1.4rem; }
     .file-info { flex: 1; }
     .file-name { font-size: 0.82rem; font-weight: 600; }
     .file-type { font-size: 0.65rem; color: #888; margin-top: 0.1rem; }
-    .file-arrow { color: #4caf6e; font-size: 1rem; }
+    .file-arrow { color: #43a047; font-size: 1rem; }
 
     /* EMPTY PANEL */
-    .empty-panel {
-      text-align: center;
-      padding: 2rem 1rem;
-      color: #555;
-    }
+    .empty-panel { text-align: center; padding: 2rem 1rem; color: #555; }
     .empty-panel .icon { font-size: 2.5rem; margin-bottom: 0.5rem; }
     .empty-panel p { font-size: 0.8rem; line-height: 1.5; }
 
     /* PLACEHOLDER */
     .no-selection {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100%;
-      text-align: center;
-      padding: 2rem;
-      color: #555;
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; height: 100%; text-align: center; padding: 2rem; color: #555;
     }
     .no-selection .icon { font-size: 3rem; margin-bottom: 1rem; }
     .no-selection h3 { font-size: 1rem; color: #888; margin-bottom: 0.5rem; }
@@ -264,28 +257,250 @@
 
     /* LEAFLET CUSTOM MARKER */
     .custom-marker {
-      background: #c8e000;
-      color: #0f1a12;
+      background: #fdd835;
+      color: #111;
       border-radius: 50%;
-      width: 32px; height: 32px;
+      width: 22px; height: 22px;
       display: flex; align-items: center; justify-content: center;
-      font-weight: 800; font-size: 0.65rem;
-      border: 2px solid #0f1a12;
+      font-weight: 800; font-size: 0.55rem;
+      border: 2px solid #111;
       box-shadow: 0 2px 8px rgba(0,0,0,0.5);
       cursor: pointer;
     }
-    .custom-marker.operational { background: #c8e000; }
-    .custom-marker.partial { background: #ff9800; }
-    .custom-marker.inactive { background: #f44336; }
+    .custom-marker.operational { background: #fdd835; }
+    .custom-marker.partial { background: #fdd835; color: #111; }
+    .custom-marker.inactive { background: #e53935; color: #fff; }
+
+    /* SEARCH PANEL */
+    #searchPanel {
+      position: absolute;
+      top: 0; left: -300px;
+      bottom: 0;
+      width: 280px;
+      height: 100%;
+      background: #1a1a1a;
+      border-right: 2px solid #e53935;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      transition: left 0.3s ease;
+      overflow-y: auto;
+    }
+    #searchPanel.open { left: 0; }
+    .sp-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.2rem;
+      border-bottom: 1px solid #333;
+      background: #222;
+    }
+    .sp-title { font-size: 0.85rem; font-weight: 800; color: #fdd835; letter-spacing: 0.05em; }
+    .sp-close { background: none; border: 1px solid #444; color: #aaa; border-radius: 6px; padding: 0.2rem 0.5rem; cursor: pointer; font-size: 0.8rem; }
+    .sp-close:hover { background: #333; color: #fff; }
+    .sp-section { padding: 1rem 1.2rem; border-bottom: 1px solid #2a2a2a; }
+    .sp-label { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #43a047; margin-bottom: 0.6rem; }
+    .sp-input {
+      width: 100%;
+      background: #111;
+      border: 1px solid #333;
+      color: #eee;
+      border-radius: 8px;
+      padding: 0.5rem 0.8rem;
+      font-size: 0.78rem;
+      outline: none;
+      font-family: 'Inter', sans-serif;
+      margin-bottom: 0.4rem;
+    }
+    .sp-input:focus { border-color: #e53935; }
+    #searchResults .sr-item {
+      padding: 0.5rem 0.4rem;
+      cursor: pointer;
+      font-size: 0.75rem;
+      border-bottom: 1px solid #2a2a2a;
+      border-radius: 6px;
+    }
+    #searchResults .sr-item:hover { background: #222; }
+
+    /* DISTRICT OPTIONS */
+    .dist-opt {
+      padding: 0.5rem 0.4rem;
+      cursor: pointer;
+      font-size: 0.78rem;
+      color: #aaa;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      border-radius: 6px;
+      transition: background 0.15s;
+    }
+    .dist-opt:hover { background: #222; color: #eee; }
+    .dist-opt.selected { color: #43a047; background: #1b3a1c; }
+    .dist-check { font-size: 0.9rem; width: 16px; }
 
 @media (max-width: 768px) {
-      .sidebar { width: 100%; position: absolute; bottom: 0; left: 0; right: 0; height: 60vh; border-left: none; border-top: 2px solid #2d7a4f; z-index: 500; }
+      .sidebar { width: 100%; position: absolute; bottom: 0; left: 0; right: 0; height: 60vh; border-left: none; border-top: 2px solid #e53935; z-index: 500; }
       .sidebar.hidden { height: 0; }
       .header-stats { display: none; }
     }
+    /* WELCOME SCREEN */
+    .skip-welcome-early #welcomeScreen { display: none !important; }
+    #welcomeScreen {
+      position: fixed;
+      inset: 0;
+      background: #0a0a0a;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+    #welcomeScreen.hide {
+      opacity: 0;
+      transform: scale(1.05);
+      pointer-events: none;
+    }
+    .wc-bg {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 50% 40%, rgba(229,57,53,0.12) 0%, rgba(67,160,71,0.08) 40%, transparent 70%);
+    }
+    .wc-lines {
+      position: absolute;
+      inset: 0;
+      background-image: repeating-linear-gradient(0deg, transparent, transparent 60px, rgba(255,255,255,0.02) 60px, rgba(255,255,255,0.02) 61px),
+                        repeating-linear-gradient(90deg, transparent, transparent 60px, rgba(255,255,255,0.02) 60px, rgba(255,255,255,0.02) 61px);
+    }
+    .wc-content {
+      position: relative;
+      text-align: center;
+      padding: 2.5rem 3rem;
+      background: rgba(0,0,0,0.55);
+      border-radius: 16px;
+      backdrop-filter: blur(4px);
+      animation: wcfadein 1.2s ease forwards;
+    }
+    @keyframes wcfadein {
+      from { opacity: 0; transform: translateY(30px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .wc-icon { font-size: 4rem; margin-bottom: 1.5rem; display: block; }
+    .wc-title {
+      font-size: 3rem;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      margin-bottom: 0.4rem;
+    }
+    .wc-title span { color: #fdd835; }
+    .wc-subtitle {
+      font-size: 0.9rem;
+      color: #bbb;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-bottom: 0.8rem;
+    }
+    .wc-divider {
+      width: 60px;
+      height: 3px;
+      background: linear-gradient(90deg, #e53935, #fdd835, #43a047);
+      margin: 1.5rem auto;
+      border-radius: 2px;
+    }
+    .wc-desc {
+      font-size: 0.88rem;
+      color: #aaa;
+      max-width: 380px;
+      margin: 0 auto 2.5rem;
+      line-height: 1.7;
+    }
+    .wc-stats {
+      display: flex;
+      gap: 2.5rem;
+      justify-content: center;
+      margin-bottom: 3rem;
+    }
+    .wc-stat-num { font-size: 1.8rem; font-weight: 800; color: #fdd835; }
+    .wc-stat-label { font-size: 0.6rem; color: #555; text-transform: uppercase; letter-spacing: 0.12em; margin-top: 0.2rem; }
+    .wc-enter {
+      background: linear-gradient(135deg, #e53935, #c62828);
+      color: #fff;
+      border: none;
+      border-radius: 50px;
+      padding: 0.9rem 3rem;
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      cursor: pointer;
+      box-shadow: 0 0 30px rgba(229,57,53,0.4);
+      transition: all 0.3s;
+      font-family: 'Inter', sans-serif;
+    }
+    .wc-enter:hover {
+      transform: scale(1.06);
+      box-shadow: 0 0 50px rgba(229,57,53,0.7);
+    }
+    .wc-version { position: absolute; bottom: 1.5rem; font-size: 0.65rem; color: #333; letter-spacing: 0.1em; }
   </style>
 </head>
 <body>
+
+  <!-- WELCOME SCREEN -->
+  <div id="welcomeScreen">
+    <canvas id="welcomeCanvas" style="position:absolute;inset:0;width:100%;height:100%;"></canvas>
+    <div class="wc-bg"></div>
+
+    <!-- STEP 1 -->
+    <div class="wc-content" id="wcStep1">
+      <div class="wc-title">Tbilisi <span>Intersections</span></div>
+      <div class="wc-subtitle">Traffic Infrastructure Inventory System</div>
+      <div class="wc-divider"></div>
+      <div class="wc-desc">A comprehensive digital inventory of traffic intersections across Tbilisi districts — surveyed, mapped and documented.</div>
+      <div class="wc-stats">
+        <div><div class="wc-stat-num" id="wcTotal">183</div><div class="wc-stat-label">Intersections</div></div>
+        <div><div class="wc-stat-num" id="wcTL">—</div><div class="wc-stat-label">Traffic Lights</div></div>
+        <div><div class="wc-stat-num">10</div><div class="wc-stat-label">Districts</div></div>
+      </div>
+      <button class="wc-enter" onclick="wcNext()">Next →</button>
+    </div>
+
+    <!-- STEP 2 -->
+    <div class="wc-content" id="wcStep2" style="display:none;">
+      <div class="wc-title" style="font-size:1.4rem;">What's Inside</div>
+      <div class="wc-divider"></div>
+      <div style="display:flex;flex-direction:column;gap:0.9rem;margin:0.5rem 0 1.5rem;text-align:left;max-width:420px;">
+        <div style="display:flex;align-items:flex-start;gap:0.9rem;">
+          <span style="font-size:1.4rem;">🗺️</span>
+          <div><div style="font-weight:700;color:#fdd835;font-size:0.88rem;">Interactive Map</div><div style="color:#777;font-size:0.78rem;margin-top:0.2rem;">Click any intersection marker to view full details — approaches, traffic lights, coordinates.</div></div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:0.9rem;">
+          <span style="font-size:1.4rem;">🚦</span>
+          <div><div style="font-weight:700;color:#fdd835;font-size:0.88rem;">Traffic Light Locator</div><div style="color:#777;font-size:0.78rem;margin-top:0.2rem;">Click any traffic light name to jump to its exact location on the map.</div></div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:0.9rem;">
+          <span style="font-size:1.4rem;">🔍</span>
+          <div><div style="font-weight:700;color:#fdd835;font-size:0.88rem;">Street Search</div><div style="color:#777;font-size:0.78rem;margin-top:0.2rem;">Search by intersection code or street name to find any location instantly.</div></div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:0.9rem;">
+          <span style="font-size:1.4rem;">📖</span>
+          <div><div style="font-weight:700;color:#fdd835;font-size:0.88rem;">Glossary</div><div style="color:#777;font-size:0.78rem;margin-top:0.2rem;">Not sure what a term means? Open the glossary from the header for full definitions.</div></div>
+        </div>
+      </div>
+      <button class="wc-enter" onclick="enterMap()">Enter Map →</button>
+    </div>
+
+    <!-- STEP DOTS -->
+    <div style="position:absolute;bottom:60px;display:flex;gap:0.5rem;">
+      <div id="wcDot1" style="width:8px;height:8px;border-radius:50%;background:#fdd835;transition:background 0.3s;"></div>
+      <div id="wcDot2" style="width:8px;height:8px;border-radius:50%;background:#333;transition:background 0.3s;"></div>
+    </div>
+
+    <div class="wc-version">Tbilisi · 2025</div>
+  </div>
 
   <!-- HEADER -->
   <div class="header">
@@ -293,9 +508,15 @@
       <div class="header-logo">Tbilisi <span>Intersections</span></div>
       <div class="header-sub">Traffic Infrastructure Inventory System</div>
     </div>
+    <button id="btnAllTL" onclick="toggleAllTLMarkers()" title="Show/Hide All Traffic Lights" style="margin-left:1.2rem;background:none;border:none;cursor:pointer;font-size:1.4rem;display:flex;align-items:center;justify-content:center;transition:all 0.2s;">🚦</button>
+    <button onclick="toggleSearchPanel()" style="margin-left:0.6rem;background:none;border:none;color:#39FF14;cursor:pointer;font-size:1.4rem;display:flex;align-items:center;justify-content:center;box-shadow:none;transition:all 0.2s;animation:searchpulse 2.5s infinite;" title="Search & Filter"><i class="fa-solid fa-binoculars"></i></button>
+    <button id="btnToggleMarkers" onclick="toggleIntersectionMarkersBtn()" title="Show/Hide Intersection Points" style="margin-left:0.6rem;background:none;border:none;cursor:pointer;font-size:1.4rem;display:flex;align-items:center;justify-content:center;transition:all 0.2s;">📍</button>
+    <button id="btnBusLanes" onclick="toggleBusLanes()" title="Show/Hide Bus Lanes" style="margin-left:0.6rem;background:none;border:none;cursor:pointer;font-size:1.4rem;display:flex;align-items:center;justify-content:center;transition:all 0.2s;">🚌</button>
+    <a href="glossary.html" title="Glossary" style="margin-left:0.6rem;background:none;border:none;color:#aaa;cursor:pointer;font-size:1.4rem;display:flex;align-items:center;justify-content:center;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#fdd835'" onmouseout="this.style.color='#aaa'"><i class="fa-solid fa-book-open"></i></a>
     <div class="header-stats">
       <div class="stat"><div class="stat-num" id="statTotal">—</div><div class="stat-label">Loaded</div></div>
       <div class="stat"><div class="stat-num" id="statOp">—</div><div class="stat-label">Operational</div></div>
+      <div class="stat"><div class="stat-num" id="statTL">—</div><div class="stat-label">Traffic Lights</div></div>
       <div class="stat"><div class="stat-num">2025</div><div class="stat-label">Survey Year</div></div>
     </div>
   </div>
@@ -304,6 +525,95 @@
 
     <!-- MAP -->
     <div id="map"></div>
+
+    <!-- SEARCH PANEL -->
+    <div id="searchPanel" onclick="event.stopPropagation()">
+      <div class="sp-header">
+        <span class="sp-title">Search & Filter</span>
+        <button onclick="toggleSearchPanel()" class="sp-close">✕</button>
+      </div>
+      <div class="sp-section">
+        <div class="sp-label">Search by Code</div>
+        <input id="searchInput" type="text" placeholder="e.g. VAK2-016, NAD1..."
+          oninput="onSearch(this.value)" class="sp-input" autocomplete="off" placeholder="e.g. VAK2-016, Tsotne Dadiani..."/>
+        <div id="searchResults"></div>
+      </div>
+      <div class="sp-section">
+        <div class="sp-label" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>Filter by District</span>
+          <span onclick="selectAllDistricts()" style="color:#fdd835;font-size:0.68rem;cursor:pointer;font-weight:700;">Reset</span>
+        </div>
+        <div id="districtList">
+          <div class="dist-opt" data-code="CHU" onclick="toggleDistrictOpt(this)"><span class="dist-check">☐</span>Chugureti</div>
+          <div class="dist-opt" data-code="DID" onclick="toggleDistrictOpt(this)"><span class="dist-check">☐</span>Didube</div>
+          <div class="dist-opt" data-code="GLD" onclick="toggleDistrictOpt(this)"><span class="dist-check">☐</span>Gldani</div>
+          <div class="dist-opt" data-code="ISA" onclick="toggleDistrictOpt(this)"><span class="dist-check">☐</span>Isani</div>
+          <div class="dist-opt" data-code="KRT" onclick="toggleDistrictOpt(this)"><span class="dist-check">☐</span>Krtsanisi</div>
+          <div class="dist-opt" data-code="MTA" onclick="toggleDistrictOpt(this)"><span class="dist-check">☐</span>Mtatsminda</div>
+          <div class="dist-opt" data-code="NAD" onclick="toggleDistrictOpt(this)"><span class="dist-check">☐</span>Nadzaladevi</div>
+          <div class="dist-opt" data-code="SAB" onclick="toggleDistrictOpt(this)"><span class="dist-check">☐</span>Saburtalo</div>
+          <div class="dist-opt" data-code="SAM" onclick="toggleDistrictOpt(this)"><span class="dist-check">☐</span>Samgori</div>
+          <div class="dist-opt" data-code="VAK" onclick="toggleDistrictOpt(this)"><span class="dist-check">☐</span>Vake</div>
+        </div>
+      </div>
+      <div class="sp-section" style="border:none;">
+        <div class="sp-label">Active Filter</div>
+        <div id="districtLabel" style="font-size:0.78rem;color:#43a047;font-weight:600;">All Districts</div>
+      </div>
+    </div>
+
+    <!-- DRAW PANEL -->
+    <!-- APPROACH POPUP -->
+    <div id="approachPopup" onclick="event.stopPropagation()" style="display:none;position:fixed;z-index:99999;background:#1a1a1a;border:1px solid #333;border-radius:14px;padding:1.4rem 1.5rem;width:340px;max-height:80vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.9);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;border-bottom:1px solid #222;padding-bottom:0.7rem;">
+        <div id="apprPopupTitle" style="font-size:1rem;font-weight:800;color:#fdd835;"></div>
+        <span onclick="document.getElementById('approachPopup').style.display='none'" style="cursor:pointer;color:#555;font-size:1.2rem;line-height:1;">&times;</span>
+      </div>
+      <div id="apprPopupBody"></div>
+    </div>
+
+    <!-- TERM POPUP -->
+    <div id="termPopup" onclick="event.stopPropagation()" style="display:none;position:fixed;z-index:99999;background:#1a1a1a;border:1px solid #e53935;border-radius:10px;padding:1rem 1.1rem;max-width:260px;box-shadow:0 4px 20px rgba(0,0,0,0.8);">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:0.5rem;margin-bottom:0.5rem;">
+        <div id="termPopupName" style="font-weight:700;color:#fdd835;font-size:0.88rem;"></div>
+        <span onclick="closeTermPopup()" style="cursor:pointer;color:#555;font-size:1rem;line-height:1;">&times;</span>
+      </div>
+      <div id="termPopupDef" style="font-size:0.78rem;color:#aaa;line-height:1.6;"></div>
+    </div>
+
+    <div id="drawPanel" onclick="event.stopPropagation()" style="position:absolute;bottom:30px;left:10px;z-index:1000;background:#1a1a1a;border:1px solid #333;border-radius:12px;padding:0.9rem;display:flex;flex-direction:column;gap:0.45rem;min-width:160px;box-shadow:0 4px 20px rgba(0,0,0,0.6);">
+      <div style="font-size:0.6rem;color:#888;text-transform:uppercase;letter-spacing:0.1em;font-weight:700;">Draw Lanes</div>
+      <button id="btnDrawBus" onclick="startDraw('bus')" style="background:none;border:1.5px solid #9c27b0;color:#9c27b0;border-radius:8px;padding:0.35rem 0.7rem;cursor:pointer;font-size:0.72rem;font-weight:700;transition:all 0.2s;">🚌 Bus Lane</button>
+      <button id="btnDrawBike" onclick="startDraw('bike')" style="background:none;border:1.5px solid #43a047;color:#43a047;border-radius:8px;padding:0.35rem 0.7rem;cursor:pointer;font-size:0.72rem;font-weight:700;transition:all 0.2s;">🚲 Bike Lane</button>
+      <button onclick="undoDrawPoint()" style="background:none;border:1px solid #444;color:#aaa;border-radius:8px;padding:0.3rem 0.7rem;cursor:pointer;font-size:0.7rem;">↩ Undo</button>
+      <button onclick="finishSegment()" style="background:none;border:1px solid #444;color:#aaa;border-radius:8px;padding:0.3rem 0.7rem;cursor:pointer;font-size:0.7rem;">✓ Finish</button>
+      <button onclick="stopDraw()" style="background:none;border:1px solid #444;color:#aaa;border-radius:8px;padding:0.3rem 0.7rem;cursor:pointer;font-size:0.7rem;">✕ Stop</button>
+      <button onclick="exportLanes()" style="background:#222;border:1px solid #fdd835;color:#fdd835;border-radius:8px;padding:0.35rem 0.7rem;cursor:pointer;font-size:0.7rem;font-weight:700;">💾 Save</button>
+      <div id="drawStatus" style="font-size:0.63rem;color:#666;min-height:12px;"></div>
+    </div>
+
+    <!-- EXPORT MODAL -->
+    <div id="exportModal" onclick="if(event.target===this)this.style.display='none'" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.75);align-items:center;justify-content:center;">
+      <div onclick="event.stopPropagation()" style="background:#1a1a1a;border:1px solid #333;border-radius:12px;padding:1.4rem;width:520px;max-width:95vw;display:flex;flex-direction:column;gap:1rem;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:0.8rem;font-weight:700;color:#fdd835;text-transform:uppercase;letter-spacing:0.1em;">💾 Save Lanes</span>
+          <button onclick="document.getElementById('exportModal').style.display='none'" style="background:none;border:none;color:#888;font-size:1.2rem;cursor:pointer;">✕</button>
+        </div>
+        <div style="font-size:0.72rem;color:#aaa;line-height:1.6;">
+          1. Click <b style="color:#fdd835">📋 Copy</b> for each file<br>
+          2. Open the file in Notepad (right-click → Open with → Notepad)<br>
+          3. Select All (<b>Ctrl+A</b>), then Paste (<b>Ctrl+V</b>), then Save (<b>Ctrl+S</b>)
+        </div>
+        <div>
+          <div style="font-size:0.68rem;color:#9c27b0;font-weight:700;margin-bottom:0.3rem;">buslanes.js &nbsp;<button onclick="copyExport('exportBusText',this)" style="background:#9c27b0;border:none;color:#fff;border-radius:5px;padding:0.2rem 0.6rem;cursor:pointer;font-size:0.65rem;">📋 Copy</button></div>
+          <textarea id="exportBusText" readonly style="width:100%;height:80px;background:#111;border:1px solid #333;color:#ccc;border-radius:6px;padding:0.4rem;font-size:0.65rem;font-family:monospace;resize:none;"></textarea>
+        </div>
+        <div>
+          <div style="font-size:0.68rem;color:#43a047;font-weight:700;margin-bottom:0.3rem;">bikelanes.js &nbsp;<button onclick="copyExport('exportBikeText',this)" style="background:#43a047;border:none;color:#fff;border-radius:5px;padding:0.2rem 0.6rem;cursor:pointer;font-size:0.65rem;">📋 Copy</button></div>
+          <textarea id="exportBikeText" readonly style="width:100%;height:80px;background:#111;border:1px solid #333;color:#ccc;border-radius:6px;padding:0.4rem;font-size:0.65rem;font-family:monospace;resize:none;"></textarea>
+        </div>
+      </div>
+    </div>
 
     <!-- SIDEBAR -->
     <div class="sidebar hidden" id="sidebar">
@@ -320,7 +630,192 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="data.js"></script>
   <script src="tl_coords.js"></script>
+  <script src="buslanes.js"></script>
+  <script src="bikelanes.js" onerror="void 0"></script>
   <script>
+    // ── BUS & BIKE LANES ──────────────────────────────────────────
+    const BBOX = '41.65,44.72,41.80,44.93';
+    const OVERPASS_URLS = [
+      'https://overpass-api.de/api/interpreter',
+      'https://overpass.kumi.systems/api/interpreter',
+      'https://maps.mail.ru/osm/tools/overpass/api/interpreter'
+    ];
+
+    let busLayer = null, bikeLayer = null;
+    let busVisible = false, bikeVisible = false;
+    let busLoaded = false, bikeLoaded = false;
+
+    async function overpassFetch(query) {
+      for (const url of OVERPASS_URLS) {
+        try {
+          const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'data=' + encodeURIComponent(query)
+          });
+          if (!res.ok) continue;
+          return await res.json();
+        } catch(e) { continue; }
+      }
+      throw new Error('All Overpass servers failed');
+    }
+
+    function overpassToPolylines(data, color, weight) {
+      const layer = L.layerGroup();
+      data.elements.forEach(el => {
+        if (el.type === 'way' && el.geometry) {
+          const latlngs = el.geometry.map(p => [p.lat, p.lon]);
+          L.polyline(latlngs, { color, weight, opacity: 0.85, smoothFactor: 1 }).addTo(layer);
+        }
+      });
+      return layer;
+    }
+
+    async function toggleBusLanes() {
+      const btn = document.getElementById('btnBusLane');
+      if (busVisible) {
+        if (busLayer) map.removeLayer(busLayer);
+        busVisible = false;
+        btn.style.background = 'none'; btn.style.color = '#9c27b0';
+        return;
+      }
+      if (!busLoaded) {
+        btn.textContent = '⏳'; btn.disabled = true;
+        const query = `[out:json][timeout:25];(way["busway"](${BBOX});way["bus:lanes"~"designated"](${BBOX});way["lanes:bus"](${BBOX});way["highway"="bus_guideway"](${BBOX}););out geom;`;
+        try {
+          const data = await overpassFetch(query);
+          busLayer = overpassToPolylines(data, '#9c27b0', 4);
+          busLoaded = true;
+        } catch(e) {
+          btn.textContent = '🚌 Bus'; btn.disabled = false;
+          alert('Could not load bus lane data. Check your internet connection.');
+          return;
+        }
+      }
+      busLayer.addTo(map);
+      busVisible = true;
+      btn.textContent = '🚌 Bus';
+      btn.disabled = false;
+      btn.style.background = '#9c27b0'; btn.style.color = '#fff';
+    }
+
+    async function toggleBikeLanes() {
+      const btn = document.getElementById('btnBikeLane');
+      if (bikeVisible) {
+        if (bikeLayer) map.removeLayer(bikeLayer);
+        bikeVisible = false;
+        btn.style.background = 'none'; btn.style.color = '#43a047';
+        return;
+      }
+      if (!bikeLoaded) {
+        btn.textContent = '⏳'; btn.disabled = true;
+        const query = `[out:json][timeout:25];(way["highway"="cycleway"](${BBOX});way["cycleway"~"lane|track|shared_lane"](${BBOX});way["cycleway:right"](${BBOX});way["cycleway:left"](${BBOX});way["cycleway:both"](${BBOX}););out geom;`;
+        try {
+          const data = await overpassFetch(query);
+          bikeLayer = overpassToPolylines(data, '#43a047', 3);
+          bikeLoaded = true;
+        } catch(e) {
+          btn.textContent = '🚲 Bike'; btn.disabled = false;
+          alert('Could not load bike lane data. Check your internet connection.');
+          return;
+        }
+      }
+      bikeLayer.addTo(map);
+      bikeVisible = true;
+      btn.textContent = '🚲 Bike';
+      btn.disabled = false;
+      btn.style.background = '#43a047'; btn.style.color = '#fff';
+    }
+
+    // ── WELCOME SCREEN ────────────────────────────────────────────
+    // ── APPROACH POPUP ───────────────────────────────────────────
+    function openApproachPopup(a) {
+      const dirLabel = (a.direction||'').toLowerCase();
+      const dirText = dirLabel==='i'?'IN':dirLabel==='o'?'OUT':dirLabel==='io'?'I/O':(a.direction||'—');
+      document.getElementById('apprPopupTitle').textContent = 'Approach #' + a.num + ' — ' + dirText;
+      function row(label, val) {
+        const empty = !val || val==='—';
+        return `<div class="appr-popup-row"><div class="appr-popup-label">${label}</div><div class="appr-popup-val${empty?' empty':''}">${empty?'—':val}</div></div>`;
+      }
+      function sec(label) { return `<div class="appr-popup-section">${label}</div>`; }
+      document.getElementById('apprPopupBody').innerHTML = `
+        <div class="appr-popup-grid">
+          ${sec('Road')}
+          ${row('Direction', dirText)}
+          ${row('Width (m)', a.width)}
+          ${row('Traffic Lanes', a.traffic)}
+          ${row('Turning', a.turning)}
+          ${sec('Cycling & Pedestrian')}
+          ${row('Bus Lane', a.buslane)}
+          ${row('Bike Lane', a.bikelane)}
+          ${row('Bikeway', a.bikeway)}
+          ${row('Buffer', a.buffer)}
+          ${row('Railing', a.railing)}
+          ${sec('Parking')}
+          ${row('Parking Spaces', a.parking)}
+          ${sec('Infrastructure')}
+          ${row('Traffic Cabinet', a.tc)}
+          ${row('Power', a.power)}
+          ${row('Internet', a.internet)}
+          ${row('Power Demand', a.powerDem)}
+          ${row('Internet Demand', a.intDem)}
+          ${sec('Bus Stop')}
+          ${row('Bus Stop', a.busStop)}
+          ${row('Shelter', a.shelter)}
+          ${row('Ad Panel', a.adPanel)}
+          ${row('Panel Dim', a.panelDim)}
+          ${a.notes ? sec('Notes') + `<div style="grid-column:1/-1;font-size:0.82rem;color:#aaa;">${a.notes}</div>` : ''}
+        </div>`;
+      const popup = document.getElementById('approachPopup');
+      popup.style.display = 'block';
+      const sidebar = document.querySelector('.sidebar');
+      const sr = sidebar.getBoundingClientRect();
+      popup.style.top = Math.min(sr.top + 60, window.innerHeight - popup.offsetHeight - 20) + 'px';
+      popup.style.left = (sr.left - 360) + 'px';
+    }
+
+    // ── TERM POPUP ────────────────────────────────────────────────
+    function closeTermPopup() {
+      document.getElementById('termPopup').style.display = 'none';
+    }
+    document.addEventListener('click', function(e) {
+      const span = e.target.closest('span.gl');
+      if (span) {
+        e.stopPropagation();
+        const popup = document.getElementById('termPopup');
+        document.getElementById('termPopupName').textContent = span.dataset.term;
+        document.getElementById('termPopupDef').textContent = span.dataset.def;
+        const sidebar = document.querySelector('.sidebar');
+        const sRect = sidebar.getBoundingClientRect();
+        const rect = span.getBoundingClientRect();
+        popup.style.display = 'block';
+        const pw = popup.offsetWidth || 260;
+        const ph = popup.offsetHeight || 120;
+        let top = rect.bottom + 6;
+        let left = sRect.left - pw - 10;
+        if (left < 6) left = 6;
+        if (top + ph > window.innerHeight - 10) top = rect.top - ph - 6;
+        popup.style.top = top + 'px';
+        popup.style.left = left + 'px';
+      } else if (!e.target.closest('#termPopup') && !e.target.closest('#approachPopup') && !e.target.closest('.appr-click-card')) {
+        closeTermPopup();
+        document.getElementById('approachPopup').style.display = 'none';
+      }
+    });
+
+    function wcNext() {
+      document.getElementById('wcStep1').style.display = 'none';
+      document.getElementById('wcStep2').style.display = 'flex';
+      document.getElementById('wcDot1').style.background = '#333';
+      document.getElementById('wcDot2').style.background = '#fdd835';
+    }
+    function enterMap() {
+      sessionStorage.setItem('mapEntered', '1');
+      const ws = document.getElementById('welcomeScreen');
+      ws.classList.add('hide');
+      setTimeout(() => ws.style.display = 'none', 800);
+    }
+
     // ── MAP SETUP ──────────────────────────────────────────────────
     const map = L.map('map', { zoomControl: true }).setView([41.7033, 44.8054], 14);
 
@@ -330,10 +825,155 @@
       maxZoom: 19
     }).addTo(map);
 
+    // ── LOAD SAVED LANES ─────────────────────────────────────────
+    const busLaneGroup = L.layerGroup().addTo(map);
+    if (typeof BUS_LANES !== 'undefined')
+      BUS_LANES.forEach(pts => L.polyline(pts, {color:'#9c27b0', weight:4, opacity:0.85}).addTo(busLaneGroup));
+    if (typeof BIKE_LANES !== 'undefined')
+      BIKE_LANES.forEach(pts => L.polyline(pts, {color:'#43a047', weight:3, opacity:0.85}).addTo(map));
+
+    // ── BUS LANE TOGGLE ───────────────────────────────────────────
+    let busLanesVisible = true;
+
+    function toggleBusLanes() {
+      const btn = document.getElementById('btnBusLanes');
+      if (busLanesVisible) {
+        map.removeLayer(busLaneGroup);
+        busLanesVisible = false;
+        btn.style.opacity = '0.3';
+      } else {
+        busLaneGroup.addTo(map);
+        busLanesVisible = true;
+        btn.style.opacity = '1';
+      }
+    }
+
+    // ── DRAW TOOL ──────────────────────────────────────────────────
+    let drawMode = null;        // 'bus' | 'bike' | null
+    let drawPoints = [];        // current segment points
+    let drawPolyline = null;    // live polyline being drawn
+    let drawMouseLine = null;   // preview line to cursor
+    let drawnBusSegs = typeof BUS_LANES !== 'undefined' ? BUS_LANES.map(s => s.slice()) : [];
+    let drawnBikeSegs = typeof BIKE_LANES !== 'undefined' ? BIKE_LANES.map(s => s.slice()) : [];
+
+    const busDrawLayer = L.layerGroup().addTo(map);
+    const bikeDrawLayer = L.layerGroup().addTo(map);
+
+    function startDraw(type) {
+      drawMode = type;
+      drawPoints = [];
+      if (drawPolyline) { (drawMode==='bus'?busDrawLayer:bikeDrawLayer).removeLayer(drawPolyline); drawPolyline = null; }
+      if (drawMouseLine) { map.removeLayer(drawMouseLine); drawMouseLine = null; }
+      map.getContainer().style.cursor = 'crosshair';
+      document.getElementById('drawStatus').textContent = type === 'bus' ? '🚌 Click to add bus lane points' : '🚲 Click to add bike lane points';
+      document.getElementById('btnDrawBus').style.background = type==='bus' ? '#7b1fa2' : '';
+      document.getElementById('btnDrawBike').style.background = type==='bike' ? '#2e7d32' : '';
+    }
+
+    function stopDraw() {
+      drawMode = null;
+      drawPoints = [];
+      if (drawPolyline) { busDrawLayer.removeLayer(drawPolyline); bikeDrawLayer.removeLayer(drawPolyline); drawPolyline = null; }
+      if (drawMouseLine) { map.removeLayer(drawMouseLine); drawMouseLine = null; }
+      map.getContainer().style.cursor = '';
+      document.getElementById('drawStatus').textContent = '';
+      document.getElementById('btnDrawBus').style.background = '';
+      document.getElementById('btnDrawBike').style.background = '';
+    }
+
+    function finishSegment() {
+      if (!drawMode || drawPoints.length < 2) {
+        document.getElementById('drawStatus').textContent = '⚠ Need at least 2 points';
+        return;
+      }
+      const pts = drawPoints.map(p => [p.lat, p.lng]);
+      if (drawMode === 'bus') {
+        drawnBusSegs.push(pts);
+        L.polyline(pts, {color:'#9c27b0', weight:4, opacity:0.85}).addTo(busDrawLayer);
+      } else {
+        drawnBikeSegs.push(pts);
+        L.polyline(pts, {color:'#43a047', weight:3, opacity:0.85}).addTo(bikeDrawLayer);
+      }
+      // Clear current drawing
+      if (drawPolyline) { busDrawLayer.removeLayer(drawPolyline); bikeDrawLayer.removeLayer(drawPolyline); drawPolyline = null; }
+      if (drawMouseLine) { map.removeLayer(drawMouseLine); drawMouseLine = null; }
+      drawPoints = [];
+      const total = drawMode==='bus' ? drawnBusSegs.length : drawnBikeSegs.length;
+      document.getElementById('drawStatus').textContent = `✓ Segment saved (${total} total). Continue or click ✓ again.`;
+    }
+
+    function undoDrawPoint() {
+      if (drawPoints.length === 0) return;
+      drawPoints.pop();
+      if (drawPolyline) { busDrawLayer.removeLayer(drawPolyline); bikeDrawLayer.removeLayer(drawPolyline); drawPolyline = null; }
+      if (drawPoints.length >= 2) {
+        const color = drawMode==='bus' ? '#9c27b0' : '#43a047';
+        drawPolyline = L.polyline(drawPoints, {color, weight: drawMode==='bus'?4:3, opacity:0.85, dashArray:'6,4'})
+          .addTo(drawMode==='bus' ? busDrawLayer : bikeDrawLayer);
+      }
+      document.getElementById('drawStatus').textContent = `Points: ${drawPoints.length}`;
+    }
+
+    function exportLanes() {
+      // Auto-finish any active segment before exporting
+      if (drawMode && drawPoints.length >= 2) {
+        const pts = drawPoints.map(p => [p.lat, p.lng]);
+        if (drawMode === 'bus') drawnBusSegs.push(pts);
+        else drawnBikeSegs.push(pts);
+        drawPoints = [];
+        if (drawPolyline) { busDrawLayer.removeLayer(drawPolyline); bikeDrawLayer.removeLayer(drawPolyline); drawPolyline = null; }
+      }
+      const busJS = 'const BUS_LANES = ' + JSON.stringify(drawnBusSegs, null, 2) + ';\n';
+      const bikeJS = 'const BIKE_LANES = ' + JSON.stringify(drawnBikeSegs, null, 2) + ';\n';
+      document.getElementById('exportModal').style.display = 'flex';
+      document.getElementById('exportBusText').value = busJS;
+      document.getElementById('exportBikeText').value = bikeJS;
+    }
+
+    function copyExport(id, btn) {
+      const ta = document.getElementById(id);
+      ta.select();
+      document.execCommand('copy');
+      btn.textContent = '✓ Copied!';
+      setTimeout(() => btn.textContent = '📋 Copy', 1500);
+    }
+
+    // Map click: add draw point
+    map.on('click', function(e) {
+      if (drawMode) {
+        drawPoints.push(e.latlng);
+        if (drawPolyline) { busDrawLayer.removeLayer(drawPolyline); bikeDrawLayer.removeLayer(drawPolyline); drawPolyline = null; }
+        if (drawPoints.length >= 2) {
+          const color = drawMode==='bus' ? '#9c27b0' : '#43a047';
+          drawPolyline = L.polyline(drawPoints, {color, weight: drawMode==='bus'?4:3, opacity:0.85, dashArray:'6,4'})
+            .addTo(drawMode==='bus' ? busDrawLayer : bikeDrawLayer);
+        }
+        document.getElementById('drawStatus').textContent = `Points: ${drawPoints.length}`;
+        return; // don't close sidebar
+      }
+      if (!document.getElementById('sidebar').classList.contains('hidden')) {
+        closeSidebar();
+      }
+      const panel = document.getElementById('searchPanel');
+      if (panel.classList.contains('open')) {
+        panel.classList.remove('open');
+      }
+    });
+
+    // Mouse move: preview line
+    map.on('mousemove', function(e) {
+      if (!drawMode || drawPoints.length === 0) return;
+      if (drawMouseLine) map.removeLayer(drawMouseLine);
+      const color = drawMode==='bus' ? '#9c27b0' : '#43a047';
+      drawMouseLine = L.polyline([drawPoints[drawPoints.length-1], e.latlng], {color, weight:2, opacity:0.5, dashArray:'4,4'}).addTo(map);
+    });
+
     // ── MARKERS ────────────────────────────────────────────────────
     const markerMap = {};
     document.getElementById('statTotal').textContent = INTERSECTIONS.length;
     document.getElementById('statOp').textContent = INTERSECTIONS.filter(i => i.status === 'Fully Operational').length;
+    document.getElementById('statTL').textContent = INTERSECTIONS.reduce((sum, i) => sum + i.trafficLights.length, 0);
+    document.getElementById('wcTL').textContent = INTERSECTIONS.reduce((sum, i) => sum + i.trafficLights.length, 0);
 
     INTERSECTIONS.forEach(inter => {
       const s = inter.status.toLowerCase();
@@ -345,14 +985,189 @@
       const icon = L.divIcon({
         html: `<div class="custom-marker ${statusClass}">${inter.code.split('-')[1]}</div>`,
         className: '',
-        iconSize: [32, 32],
-        iconAnchor: [16, 16]
+        iconSize: [22, 22],
+        iconAnchor: [11, 11]
       });
 
       const marker = L.marker([inter.lat, inter.lng], { icon }).addTo(map);
       markerMap[inter.code] = marker;
-      marker.on('click', () => { openSidebar(inter); map.setView([inter.lat, inter.lng], 17); });
+      marker.on('click', () => { openSidebar(inter); map.setView([inter.lat, inter.lng], 19); hideIntersectionMarkers(); });
     });
+
+    // ── DISTRICT FILTER ────────────────────────────────────────────
+    let selectedDistricts = new Set();
+
+    function toggleDistrictDropdown() {
+      const dd = document.getElementById('districtDropdown');
+      dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function toggleDistrictOpt(el) {
+      const code = el.dataset.code;
+      const check = el.querySelector('.dist-check');
+      if (selectedDistricts.has(code)) {
+        selectedDistricts.delete(code);
+        el.classList.remove('selected');
+        check.textContent = '☐';
+      } else {
+        selectedDistricts.add(code);
+        el.classList.add('selected');
+        check.textContent = '☑';
+      }
+      applyDistrictFilter();
+    }
+
+    function selectAllDistricts() {
+      selectedDistricts.clear();
+      document.querySelectorAll('.dist-opt').forEach(el => {
+        el.classList.remove('selected');
+        el.querySelector('.dist-check').textContent = '☐';
+      });
+      applyDistrictFilter();
+      updateStats();
+    }
+
+    function applyDistrictFilter() {
+      const label = document.getElementById('districtLabel');
+      if (selectedDistricts.size === 0) {
+        label.textContent = 'All Districts';
+      } else {
+        const names = [...document.querySelectorAll('.dist-opt.selected')].map(e => e.textContent.trim().replace('☑','').trim());
+        label.textContent = names.join(', ');
+      }
+      // Close sidebar without restoring markers
+      clearIntersectionTLMarkers();
+      if (activeTLMarker) { map.removeLayer(activeTLMarker); activeTLMarker = null; }
+      document.getElementById('sidebar').classList.add('hidden');
+      // Apply visibility
+      INTERSECTIONS.forEach(inter => {
+        const m = markerMap[inter.code];
+        if (!m) return;
+        const visible = selectedDistricts.size === 0 || [...selectedDistricts].some(c => inter.code.startsWith(c));
+        m.setOpacity(visible ? 1 : 0).setZIndexOffset(visible ? 0 : -1000);
+      });
+      if (selectedDistricts.size > 0) {
+        const visible = INTERSECTIONS.filter(i => [...selectedDistricts].some(c => i.code.startsWith(c)) && i.lat && i.lng);
+        if (visible.length) map.fitBounds(L.latLngBounds(visible.map(i => [i.lat, i.lng])), { padding: [40, 40] });
+      }
+      // If all-TL markers are showing, refresh them for the new district filter
+      if (allTLMarkersVisible) {
+        allTLMarkersList.forEach(m => map.removeLayer(m));
+        allTLMarkersList = [];
+        allTLMarkersVisible = false;
+        toggleAllTLMarkers();
+      }
+      updateStats();
+    }
+
+    function updateStats() {
+      const visible = selectedDistricts.size === 0
+        ? INTERSECTIONS
+        : INTERSECTIONS.filter(i => [...selectedDistricts].some(c => i.code.startsWith(c)));
+      document.getElementById('statTotal').textContent = visible.length;
+      document.getElementById('statOp').textContent = visible.filter(i => i.status.toLowerCase() === 'fully operational').length;
+      document.getElementById('statTL').textContent = visible.reduce((sum, i) => sum + i.trafficLights.length, 0);
+    }
+
+    document.addEventListener('click', e => {
+      if (!e.target.closest('#districtTrigger') && !e.target.closest('#districtDropdown')) {
+        document.getElementById('districtDropdown').style.display = 'none';
+      }
+    });
+
+    // ── SEARCH PANEL ───────────────────────────────────────────────
+    function toggleSearchPanel() {
+      document.getElementById('searchPanel').classList.toggle('open');
+    }
+
+    function onSearch(val) {
+      const box = document.getElementById('searchResults');
+      const q = val.trim().toUpperCase();
+      if (!q) { box.innerHTML = ''; return; }
+      const matches = INTERSECTIONS.filter(i => i.code.toUpperCase().includes(q) || i.name.toUpperCase().includes(q)).slice(0, 10);
+      if (!matches.length) { box.innerHTML = '<div style="font-size:0.72rem;color:#555;padding:0.4rem">No results</div>'; return; }
+      box.innerHTML = matches.map(i => `
+        <div class="sr-item" onclick="selectSearch('${i.code}')">
+          <div style="color:#fdd835;font-weight:700">${i.code}</div>
+          <div style="color:#666;font-size:0.68rem;margin-top:1px">${i.name.substring(0,45)}</div>
+        </div>`).join('');
+    }
+
+    function selectSearch(code) {
+      const inter = INTERSECTIONS.find(i => i.code === code);
+      if (!inter) return;
+      document.getElementById('searchInput').value = code;
+      document.getElementById('searchResults').innerHTML = '';
+      map.setView([inter.lat, inter.lng], 19);
+      openSidebar(inter);
+      hideIntersectionMarkers();
+    }
+
+    // ── SHOW ALL TRAFFIC LIGHTS ────────────────────────────────────
+    let allTLMarkersVisible = false;
+    let allTLMarkersList = [];
+
+    function toggleAllTLMarkers() {
+      const btn = document.getElementById('btnAllTL');
+      if (allTLMarkersVisible) {
+        allTLMarkersList.forEach(m => map.removeLayer(m));
+        allTLMarkersList = [];
+        allTLMarkersVisible = false;
+        btn.style.opacity = '1';
+        btn.textContent = '🚦';
+      } else {
+        const activeInters = selectedDistricts.size === 0
+          ? INTERSECTIONS
+          : INTERSECTIONS.filter(i => [...selectedDistricts].some(c => i.code.startsWith(c)));
+        activeInters.forEach(inter => {
+          inter.trafficLights.forEach(tl => {
+            const coord = TL_COORDS[tl.name.toUpperCase()];
+            if (!coord) return;
+            const icon = L.divIcon({
+              html: `<div class="tl-pole-marker"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 36" width="24" height="36"><rect x="4" y="2" width="16" height="26" rx="3" fill="#1a1a2e" stroke="#5b9cf6" stroke-width="1.5"/><circle cx="12" cy="8" r="3.5" fill="#f44336"/><circle cx="12" cy="17" r="3.5" fill="#ffb300"/><circle cx="12" cy="26" r="3.5" fill="#4caf50"/><rect x="10" y="28" width="4" height="5" fill="#5b9cf6"/><rect x="7" y="32" width="10" height="2" rx="1" fill="#5b9cf6"/></svg></div>`,
+              className: '',
+              iconSize: [24, 36],
+              iconAnchor: [12, 36]
+            });
+            const m = L.marker([coord.lat, coord.lng], { icon })
+              .bindPopup(tlPopupHTML(tl, coord), { maxWidth: 280 })
+              .addTo(map);
+            allTLMarkersList.push(m);
+          });
+        });
+        allTLMarkersVisible = true;
+        btn.style.opacity = '0.6';
+        btn.textContent = '🚦';
+      }
+    }
+
+    // ── INTERSECTION MARKER TOGGLE BUTTON ─────────────────────────
+    let intersectionMarkersVisible = true;
+    function toggleIntersectionMarkersBtn() {
+      const btn = document.getElementById('btnToggleMarkers');
+      if (intersectionMarkersVisible) {
+        hideIntersectionMarkers();
+        intersectionMarkersVisible = false;
+        btn.style.opacity = '0.3';
+      } else {
+        showIntersectionMarkers();
+        intersectionMarkersVisible = true;
+        btn.style.opacity = '1';
+      }
+    }
+
+    // ── INTERSECTION MARKER VISIBILITY ────────────────────────────
+    function hideIntersectionMarkers() {
+      Object.values(markerMap).forEach(m => m.setOpacity(0).setZIndexOffset(-1000));
+    }
+    function showIntersectionMarkers() {
+      INTERSECTIONS.forEach(inter => {
+        const m = markerMap[inter.code];
+        if (!m) return;
+        const visible = selectedDistricts.size === 0 || [...selectedDistricts].some(c => inter.code.startsWith(c));
+        if (visible) m.setOpacity(1).setZIndexOffset(0);
+      });
+    }
 
     // ── TRAFFIC LIGHT LOCATOR ──────────────────────────────────────
     let activeTLMarker = null;
@@ -364,21 +1179,36 @@
     }
 
     function tlPopupHTML(tl, coord) {
-      const f = (v) => (v && v !== '0') ? v : '—';
-      const c = (v) => (v && v !== '0') ? '✔' : '—';
+      const f = (v) => (v !== '' && v !== null && v !== undefined && String(v) !== '0') ? `<span style="color:#000;font-weight:900;font-size:0.85rem">${v}</span>` : '<span style="color:#444">—</span>';
+      const rows = [
+        ['Diameter', tl.diameter], ['Height (m)', tl.height],
+        ['Length', tl.length],     ['Traffic sig.', tl.traffic],
+        ['Pedestrian', tl.pedestrian], ['Cycling', tl.cycling],
+        ['Single R', tl.singleR],  ['Single Y', tl.singleY],
+        ['Single G', tl.singleG],  ['Countdown', tl.countdown],
+        ['Forward', tl.forward],   ['Right', tl.right],
+        ['Left', tl.left],         ['Bus sig.', tl.bus],
+        ['Camera', tl.camera],     ['Detector', tl.detector],
+        ['Acoustic', tl.acoustic], ['Button', tl.button],
+        ['Sunshade', tl.sunshade],
+      ];
+      let tableRows = '';
+      for (let i = 0; i < rows.length; i += 2) {
+        const [k1,v1] = rows[i];
+        const [k2,v2] = rows[i+1] || ['',''];
+        tableRows += `<tr>
+          <td style="color:#888;padding:2px 5px 2px 0;white-space:nowrap">${k1}</td>
+          <td style="padding:2px 10px 2px 0">${f(v1)}</td>
+          <td style="color:#888;padding:2px 5px 2px 0;white-space:nowrap">${k2}</td>
+          <td>${f(v2)}</td>
+        </tr>`;
+      }
       return `
-        <div style="font-family:'Inter',sans-serif;min-width:220px;">
+        <div style="font-family:'Inter',sans-serif;min-width:230px;">
           <div style="font-size:1rem;font-weight:800;color:#5b9cf6;margin-bottom:6px;">${tl.name}</div>
-          <table style="width:100%;border-collapse:collapse;font-size:0.78rem;">
-            <tr><td style="color:#888;padding:2px 6px 2px 0">Diameter</td><td style="font-weight:600">${f(tl.diameter)}</td><td style="color:#888;padding:2px 6px 2px 8px">Height</td><td style="font-weight:600">${f(tl.height)} m</td></tr>
-            <tr><td style="color:#888;padding:2px 6px 2px 0">Traffic sig.</td><td style="font-weight:600">${f(tl.traffic)}</td><td style="color:#888;padding:2px 6px 2px 8px">Pedestrian</td><td style="font-weight:600">${f(tl.pedestrian)}</td></tr>
-            <tr><td style="color:#888;padding:2px 6px 2px 0">Cycling</td><td style="font-weight:600">${c(tl.cycling)}</td><td style="color:#888;padding:2px 6px 2px 8px">Countdown</td><td style="font-weight:600">${c(tl.countdown)}</td></tr>
-            <tr><td style="color:#888;padding:2px 6px 2px 0">Camera</td><td style="font-weight:600">${c(tl.camera)}</td><td style="color:#888;padding:2px 6px 2px 8px">Detector</td><td style="font-weight:600">${c(tl.detector)}</td></tr>
-            <tr><td style="color:#888;padding:2px 6px 2px 0">Acoustic</td><td style="font-weight:600">${c(tl.acoustic)}</td><td style="color:#888;padding:2px 6px 2px 8px">Button</td><td style="font-weight:600">${c(tl.button)}</td></tr>
-            <tr><td style="color:#888;padding:2px 6px 2px 0">Sunshade</td><td style="font-weight:600">${f(tl.sunshade)}</td><td style="color:#888;padding:2px 6px 2px 8px">Bus sig.</td><td style="font-weight:600">${c(tl.bus)}</td></tr>
-            ${tl.note ? `<tr><td colspan="4" style="color:#aaa;padding-top:4px;font-style:italic">${tl.note}</td></tr>` : ''}
-          </table>
-          <div style="color:#666;font-size:0.65rem;margin-top:6px">${coord.lat.toFixed(6)}, ${coord.lng.toFixed(6)}</div>
+          <table style="width:100%;border-collapse:collapse;font-size:0.76rem;">${tableRows}</table>
+          ${tl.note ? `<div style="color:#aaa;font-size:0.7rem;margin-top:5px;font-style:italic">${tl.note}</div>` : ''}
+          <div style="color:#555;font-size:0.62rem;margin-top:6px">${coord.lat.toFixed(6)}, ${coord.lng.toFixed(6)}</div>
         </div>`;
     }
 
@@ -451,6 +1281,7 @@
     function closeSidebar() {
       clearIntersectionTLMarkers();
       if (activeTLMarker) { map.removeLayer(activeTLMarker); activeTLMarker = null; }
+      showIntersectionMarkers();
       document.getElementById('sidebar').classList.add('hidden');
     }
 
@@ -464,6 +1295,42 @@
     }
 
     function v(val) { return val && val !== '0' ? val : '—'; }
+
+    function parseTurning(str) {
+      const lanes = [];
+      if (!str || str === '—') return lanes;
+      const matches = str.match(/(\d+)([slrSLR])/g) || [];
+      matches.forEach(m => {
+        const count = parseInt(m);
+        const type = m.slice(-1).toLowerCase();
+        for (let i = 0; i < count; i++) lanes.push(type);
+      });
+      return lanes;
+    }
+
+    function buildApproachDiagram(approaches) {
+      if (!approaches.length) return '';
+      const cards = approaches.map(a => {
+        const lanes = parseTurning(a.turning);
+        const dirLabel = (a.direction||'').toLowerCase();
+        const dirClass = dirLabel === 'i' ? 'appr-dir-i' : dirLabel === 'o' ? 'appr-dir-o' : 'appr-dir-io';
+        const dirText = dirLabel === 'i' ? 'IN' : dirLabel === 'o' ? 'OUT' : dirLabel === 'io' ? 'I/O' : dirLabel.toUpperCase() || '—';
+        const laneBoxes = lanes.length
+          ? lanes.map(t => {
+              const arrow = t === 's' ? '↑' : t === 'l' ? '↰' : t === 'r' ? '↱' : '?';
+              return `<div class="appr-lane">${arrow}</div>`;
+            }).join('')
+          : '<div class="appr-lane" style="color:#444">—</div>';
+        return `<div class="appr-card">
+          <div class="appr-card-header">
+            <span class="appr-card-num">#${a.num}</span>
+            <span class="appr-card-dir ${dirClass}">${dirText}</span>
+          </div>
+          <div class="appr-lanes">${laneBoxes}</div>
+        </div>`;
+      }).join('');
+      return `<div class="info-card"><div class="info-card-title">Lane Directions</div><div class="appr-diagram">${cards}</div></div>`;
+    }
 
     function buildSidebar(i) {
       const approaches = i.approaches.map(a => `
@@ -565,10 +1432,10 @@
               <table class="approaches-table" style="min-width:900px;">
                 <thead>
                   <tr>
-                    <th>#</th><th>Dir</th><th>Width</th><th>Traffic</th><th>Turning</th>
-                    <th>Buslane</th><th>Bikelane</th><th>Bikeway</th><th>Parking</th><th>Buffer</th>
-                    <th>TC</th><th>Power</th><th>Internet</th><th>Pwr Dem</th><th>Int Dem</th>
-                    <th>Railing</th><th>Bus Stop</th><th>Shelter</th><th>Ad Panel</th><th>Panel Dim</th>
+                    <th>#</th><th><span class="gl" data-term="Direction (Dir)" data-def="The direction of traffic flow on the approach. I = Inbound, O = Outbound, I/O = both directions.">Dir</span></th><th><span class="gl" data-term="Width" data-def="The total carriageway width of the approach in meters, measured at the stop line.">Width</span></th><th><span class="gl" data-term="Traffic Lanes" data-def="The number of lanes dedicated to general motor vehicle traffic on the approach.">Traffic</span></th><th><span class="gl" data-term="Turning" data-def="Lane turning configuration: S = straight, L = left turn, R = right turn. Example: 2s1r means 2 straight lanes and 1 right-turn lane.">Turning</span></th>
+                    <th><span class="gl" data-term="Bus Lane" data-def="Number of lanes exclusively designated for buses on the approach.">Buslane</span></th><th><span class="gl" data-term="Bike Lane" data-def="A marked lane on the carriageway reserved for cyclists, separated from motor traffic by a painted line.">Bikelane</span></th><th><span class="gl" data-term="Bikeway" data-def="A physically separated cycling path, elevated or protected from motor traffic.">Bikeway</span></th><th><span class="gl" data-term="Parking" data-def="Number of parking spaces present on the approach near the intersection.">Parking</span></th><th><span class="gl" data-term="Buffer" data-def="A physical separation zone (e.g. median strip, bollards) between opposing traffic flows or between traffic and cyclists/pedestrians.">Buffer</span></th>
+                    <th><span class="gl" data-term="TC (Traffic Cabinet)" data-def="Presence of a traffic signal controller cabinet on the approach. Value 1 = present.">TC</span></th><th><span class="gl" data-term="Power" data-def="Indicates whether a power connection is present at the approach for the traffic signal system.">Power</span></th><th><span class="gl" data-term="Internet" data-def="Indicates whether a data/internet connection is present at the approach for remote monitoring or adaptive signal control.">Internet</span></th><th><span class="gl" data-term="Power Demand" data-def="Indicates whether a power supply upgrade or new connection is required at this approach.">Pwr Dem</span></th><th><span class="gl" data-term="Internet Demand" data-def="Indicates whether a new or upgraded internet connection is required at this approach.">Int Dem</span></th>
+                    <th><span class="gl" data-term="Railing" data-def="Pedestrian guard railing present on the approach, used to direct pedestrian flow to designated crossing points.">Railing</span></th><th><span class="gl" data-term="Bus Stop" data-def="Number of bus stops located on the approach near the intersection.">Bus Stop</span></th><th><span class="gl" data-term="Shelter" data-def="Number of covered bus/waiting shelters at stops on the approach.">Shelter</span></th><th><span class="gl" data-term="Ad Panel" data-def="Number of advertising panels (billboards or display frames) present on the approach.">Ad Panel</span></th><th><span class="gl" data-term="Panel Dim" data-def="Size of the advertising panel in square meters or standard format (e.g. 6 = 6m²).">Panel Dim</span></th>
                     <th>Notes</th>
                   </tr>
                 </thead>
@@ -583,10 +1450,10 @@
               <table class="tl-table" style="min-width:1000px;">
                 <thead>
                   <tr>
-                    <th>Name</th><th>Dia.</th><th>H(m)</th><th>Len</th><th>Traffic</th><th>Ped.</th><th>Cycling</th>
-                    <th>Sng R</th><th>Sng Y</th><th>Sng G</th><th>Cdwn</th>
-                    <th>Fwd</th><th>Right</th><th>Left</th><th>Bus</th>
-                    <th>Cam</th><th>Det.</th><th>Acst</th><th>Btn</th><th>Sun</th><th>Note</th>
+                    <th>Name</th><th><span class="gl" data-term="Diameter" data-def="The diameter of the signal lens in centimeters. Standard sizes: 22cm (vehicle), 10cm (secondary), 9cm (pedestrian).">Dia.</span></th><th><span class="gl" data-term="Height" data-def="The mounting height of the signal head above ground level, in meters.">H(m)</span></th><th><span class="gl" data-term="Length (Cantilever)" data-def="The horizontal arm length of the signal pole in meters, used when the signal head is projected over the carriageway.">Len</span></th><th><span class="gl" data-term="Traffic Signals" data-def="Number of vehicle traffic signal heads mounted on this pole.">Traffic</span></th><th><span class="gl" data-term="Pedestrian Signals" data-def="Number of pedestrian signal heads (walk/don't walk indicators) mounted on this pole.">Ped.</span></th><th><span class="gl" data-term="Cycling Signals" data-def="Number of signal heads specifically designed for cyclists mounted on this pole.">Cycling</span></th>
+                    <th><span class="gl" data-term="Single Red" data-def="Number of single red signal heads (one lens only). Used in supplementary or special-purpose applications.">Sng R</span></th><th><span class="gl" data-term="Single Yellow" data-def="Number of single yellow signal heads (one lens only). Used in supplementary or special-purpose applications.">Sng Y</span></th><th><span class="gl" data-term="Single Green" data-def="Number of single green signal heads (one lens only). Used in supplementary or special-purpose applications.">Sng G</span></th><th><span class="gl" data-term="Countdown" data-def="Presence of a countdown timer display on the pole showing remaining seconds of the current phase.">Cdwn</span></th>
+                    <th><span class="gl" data-term="Forward Arrow" data-def="Number of forward arrow signal heads indicating permitted straight movement.">Fwd</span></th><th><span class="gl" data-term="Right Arrow" data-def="Number of right-turn arrow signal heads indicating permitted right turn movement.">Right</span></th><th><span class="gl" data-term="Left Arrow" data-def="Number of left-turn arrow signal heads indicating permitted left turn movement.">Left</span></th><th><span class="gl" data-term="Bus Signal" data-def="Number of signal heads specifically for bus priority (tram/bus phase indicators).">Bus</span></th>
+                    <th><span class="gl" data-term="Camera" data-def="Number of cameras mounted on the pole. May include enforcement cameras, traffic monitoring, or CCTV.">Cam</span></th><th><span class="gl" data-term="Detector" data-def="Presence of a vehicle or pedestrian detector on the pole. Used for demand-responsive signal control.">Det.</span></th><th><span class="gl" data-term="Acoustic Signal" data-def="Presence of an audible signal device (beeper or voice message) for visually impaired pedestrians.">Acst</span></th><th><span class="gl" data-term="Button" data-def="Presence of a pedestrian push button to request a crossing phase.">Btn</span></th><th><span class="gl" data-term="Sunshade" data-def="Number of sun visors (hoods) fitted to signal heads to improve visibility in bright conditions.">Sun</span></th><th>Note</th>
                   </tr>
                 </thead>
                 <tbody>${lights}</tbody>
@@ -604,6 +1471,229 @@
         </div>
       `;
     }
+  </script>
+
+  <script>
+  // ── WELCOME SCREEN ANIMATION ──────────────────────────────────
+  (function() {
+    const canvas = document.getElementById('welcomeCanvas');
+    const ctx = canvas.getContext('2d');
+    const RW = 120; // road width
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    // Traffic light phases: 0=H green, 1=H yellow, 2=V green, 3=V yellow
+    let tlPhase = 0, tlFrames = 0;
+    const PHASE_DUR = [280, 50, 280, 50];
+
+    function updateTL() {
+      tlFrames++;
+      if (tlFrames >= PHASE_DUR[tlPhase]) { tlPhase = (tlPhase + 1) % 4; tlFrames = 0; }
+    }
+    function hGreen() { return tlPhase === 0; }
+    function vGreen() { return tlPhase === 2; }
+    function hYellow(){ return tlPhase === 1; }
+    function vYellow(){ return tlPhase === 3; }
+    function hColor() { return tlPhase===0?'#43a047':tlPhase===1?'#fdd835':'#e53935'; }
+    function vColor() { return tlPhase===2?'#43a047':tlPhase===3?'#fdd835':'#e53935'; }
+
+    // Vehicle class
+    const COLORS = ['#e53935','#fdd835','#1e88e5','#43a047','#ff7043','#ab47bc','#eee','#90a4ae','#26c6da','#d4e157'];
+    class Vehicle {
+      constructor(dir, lane, offset) {
+        this.dir = dir; // 0=R,1=L,2=D,3=U
+        this.lane = lane;
+        this.type = Math.random() < 0.22 ? 'bus' : 'car';
+        this.len = this.type==='bus' ? 58 : 36;
+        this.wid = this.type==='bus' ? 22 : 16;
+        this.spd = this.type==='bus' ? 1.4 : 1.7 + Math.random();
+        this.col = COLORS[Math.floor(Math.random()*COLORS.length)];
+        this.reset(offset);
+      }
+      reset(offset=0) {
+        const cx=canvas.width/2, cy=canvas.height/2;
+        const lc = (this.lane+0.5)*(RW/2/2); // lane center from road center
+        if(this.dir===0){this.x=-this.len-offset; this.y=cy+lc;}
+        else if(this.dir===1){this.x=canvas.width+offset; this.y=cy-lc;}
+        else if(this.dir===2){this.x=cx+lc; this.y=-this.len-offset;}
+        else{this.x=cx-lc; this.y=canvas.height+offset;}
+      }
+      stopAt() {
+        const cx=canvas.width/2, cy=canvas.height/2, m=RW/2+8;
+        if(this.dir===0) return cx-m;
+        if(this.dir===1) return cx+m;
+        if(this.dir===2) return cy-m;
+        return cy+m;
+      }
+      mustStop() {
+        const s=this.stopAt();
+        if(this.dir===0) return !hGreen()&&!hYellow()&&this.x+this.len>=s-2&&this.x<s+60;
+        if(this.dir===1) return !hGreen()&&!hYellow()&&this.x<=s+2&&this.x>s-60;
+        if(this.dir===2) return !vGreen()&&!vYellow()&&this.y+this.len>=s-2&&this.y<s+60;
+        return !vGreen()&&!vYellow()&&this.y<=s+2&&this.y>s-60;
+      }
+      update() {
+        if(this.mustStop()) return;
+        if(this.dir===0) this.x+=this.spd;
+        else if(this.dir===1) this.x-=this.spd;
+        else if(this.dir===2) this.y+=this.spd;
+        else this.y-=this.spd;
+      }
+      offScreen() {
+        const W=canvas.width,H=canvas.height;
+        if(this.dir===0&&this.x>W+20) return true;
+        if(this.dir===1&&this.x<-this.len-20) return true;
+        if(this.dir===2&&this.y>H+20) return true;
+        if(this.dir===3&&this.y<-this.len-20) return true;
+        return false;
+      }
+      draw() {
+        ctx.save();
+        const isH = this.dir===0||this.dir===1;
+        const bw = isH ? this.len : this.wid;
+        const bh = isH ? this.wid : this.len;
+        const flip = this.dir===1||this.dir===3;
+
+        ctx.fillStyle = this.col;
+        ctx.beginPath();
+        ctx.roundRect(this.x, this.y, bw, bh, 3);
+        ctx.fill();
+
+        // Window
+        ctx.fillStyle = 'rgba(0,0,0,0.45)';
+        if(isH) ctx.fillRect(this.x+(flip?4:this.len/2), this.y+3, this.len/2-6, this.wid-6);
+        else    ctx.fillRect(this.x+3, this.y+(flip?4:this.len/2), this.wid-6, this.len/2-6);
+
+        // Headlights
+        ctx.fillStyle = 'rgba(255,255,200,0.95)';
+        if(this.dir===0){ctx.fillRect(this.x+this.len-4,this.y+2,4,4);ctx.fillRect(this.x+this.len-4,this.y+this.wid-6,4,4);}
+        else if(this.dir===1){ctx.fillRect(this.x,this.y+2,4,4);ctx.fillRect(this.x,this.y+this.wid-6,4,4);}
+        else if(this.dir===2){ctx.fillRect(this.x+2,this.y+this.len-4,4,4);ctx.fillRect(this.x+this.wid-6,this.y+this.len-4,4,4);}
+        else{ctx.fillRect(this.x+2,this.y,4,4);ctx.fillRect(this.x+this.wid-6,this.y,4,4);}
+
+        // Tail lights
+        ctx.fillStyle = 'rgba(255,40,40,0.9)';
+        if(this.dir===0){ctx.fillRect(this.x,this.y+2,4,4);ctx.fillRect(this.x,this.y+this.wid-6,4,4);}
+        else if(this.dir===1){ctx.fillRect(this.x+this.len-4,this.y+2,4,4);ctx.fillRect(this.x+this.len-4,this.y+this.wid-6,4,4);}
+        else if(this.dir===2){ctx.fillRect(this.x+2,this.y,4,4);ctx.fillRect(this.x+this.wid-6,this.y,4,4);}
+        else{ctx.fillRect(this.x+2,this.y+this.len-4,4,4);ctx.fillRect(this.x+this.wid-6,this.y+this.len-4,4,4);}
+
+        ctx.restore();
+      }
+    }
+
+    // Spawn vehicles
+    let vehicles = [];
+    for(let d=0;d<4;d++) for(let l=0;l<2;l++) for(let i=0;i<4;i++)
+      vehicles.push(new Vehicle(d,l,i*100+Math.random()*60));
+
+    function drawRoads(cx,cy) {
+      // Background
+      ctx.fillStyle='#0d0d0d'; ctx.fillRect(0,0,canvas.width,canvas.height);
+      // Sidewalk blocks
+      ctx.fillStyle='#161616';
+      ctx.fillRect(0,0,cx-RW/2,cy-RW/2);
+      ctx.fillRect(cx+RW/2,0,canvas.width-(cx+RW/2),cy-RW/2);
+      ctx.fillRect(0,cy+RW/2,cx-RW/2,canvas.height-(cy+RW/2));
+      ctx.fillRect(cx+RW/2,cy+RW/2,canvas.width-(cx+RW/2),canvas.height-(cy+RW/2));
+      // Roads
+      ctx.fillStyle='#1c1c1c';
+      ctx.fillRect(0,cy-RW/2,canvas.width,RW);
+      ctx.fillRect(cx-RW/2,0,RW,canvas.height);
+      // Intersection
+      ctx.fillStyle='#222'; ctx.fillRect(cx-RW/2,cy-RW/2,RW,RW);
+
+      // Center yellow lines
+      ctx.strokeStyle='rgba(253,216,53,0.7)'; ctx.lineWidth=2; ctx.setLineDash([18,14]);
+      [[0,cy,cx-RW/2,cy],[cx+RW/2,cy,canvas.width,cy],[cx,0,cx,cy-RW/2],[cx,cy+RW/2,cx,canvas.height]].forEach(([x1,y1,x2,y2])=>{
+        ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+      });
+
+      // White lane dashes
+      ctx.strokeStyle='rgba(255,255,255,0.3)'; ctx.lineWidth=1.5; ctx.setLineDash([12,18]);
+      const lw=RW/4;
+      [1,3].forEach(i=>{
+        const y=cy-RW/2+lw*i;
+        ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(cx-RW/2,y); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(cx+RW/2,y); ctx.lineTo(canvas.width,y); ctx.stroke();
+        const x=cx-RW/2+lw*i;
+        ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,cy-RW/2); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x,cy+RW/2); ctx.lineTo(x,canvas.height); ctx.stroke();
+      });
+      ctx.setLineDash([]);
+
+      // Crosswalks
+      ctx.fillStyle='rgba(255,255,255,0.18)';
+      for(let i=0;i<8;i++){
+        const sw=RW/8-1;
+        ctx.fillRect(cx-RW/2+i*(RW/8),cy-RW/2-18,sw,12);
+        ctx.fillRect(cx-RW/2+i*(RW/8),cy+RW/2+6,sw,12);
+        ctx.fillRect(cx-RW/2-18,cy-RW/2+i*(RW/8),12,sw);
+        ctx.fillRect(cx+RW/2+6,cy-RW/2+i*(RW/8),12,sw);
+      }
+
+      // Road edge lines
+      ctx.strokeStyle='rgba(255,255,255,0.1)'; ctx.lineWidth=1; ctx.setLineDash([]);
+      const edges=[[0,cy-RW/2,cx-RW/2,cy-RW/2],[cx+RW/2,cy-RW/2,canvas.width,cy-RW/2],[0,cy+RW/2,cx-RW/2,cy+RW/2],[cx+RW/2,cy+RW/2,canvas.width,cy+RW/2],[cx-RW/2,0,cx-RW/2,cy-RW/2],[cx-RW/2,cy+RW/2,cx-RW/2,canvas.height],[cx+RW/2,0,cx+RW/2,cy-RW/2],[cx+RW/2,cy+RW/2,cx+RW/2,canvas.height]];
+      edges.forEach(([x1,y1,x2,y2])=>{ ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke(); });
+    }
+
+    function drawTLBox(x,y,activeColor) {
+      // Glow
+      ctx.shadowColor=activeColor; ctx.shadowBlur=16;
+      // Pole
+      ctx.fillStyle='#444'; ctx.fillRect(x-2,y,4,22);
+      // Box
+      ctx.shadowBlur=0; ctx.fillStyle='#111';
+      ctx.beginPath(); ctx.roundRect(x-9,y-30,18,28,3); ctx.fill();
+      // 3 lights
+      ['#e53935','#fdd835','#43a047'].forEach((c,i)=>{
+        const lit = c===activeColor;
+        ctx.fillStyle = lit ? c : 'rgba(60,60,60,0.9)';
+        if(lit){ctx.shadowColor=c; ctx.shadowBlur=10;}
+        else ctx.shadowBlur=0;
+        ctx.beginPath(); ctx.arc(x, y-24+i*9, 4, 0, Math.PI*2); ctx.fill();
+      });
+      ctx.shadowBlur=0;
+    }
+
+    function drawTLs(cx,cy) {
+      const o=RW/2+18;
+      drawTLBox(cx-o, cy-o, hColor());
+      drawTLBox(cx+o, cy-o, vColor());
+      drawTLBox(cx-o, cy+o, hColor());
+      drawTLBox(cx+o, cy+o, vColor());
+    }
+
+    function drawGlow(cx,cy) {
+      const g=ctx.createRadialGradient(cx,cy,0,cx,cy,RW*1.2);
+      g.addColorStop(0,'rgba(253,216,53,0.06)'); g.addColorStop(1,'transparent');
+      ctx.fillStyle=g; ctx.beginPath(); ctx.arc(cx,cy,RW*1.2,0,Math.PI*2); ctx.fill();
+    }
+
+    function animate() {
+      if(document.getElementById('welcomeScreen').style.display==='none') return;
+      requestAnimationFrame(animate);
+      const cx=canvas.width/2, cy=canvas.height/2;
+      updateTL();
+      vehicles=vehicles.filter(v=>!v.offScreen());
+      for(let d=0;d<4;d++) for(let l=0;l<2;l++){
+        const c=vehicles.filter(v=>v.dir===d&&v.lane===l).length;
+        if(c<4&&Math.random()<0.004) vehicles.push(new Vehicle(d,l,0));
+      }
+      drawRoads(cx,cy);
+      drawGlow(cx,cy);
+      drawTLs(cx,cy);
+      vehicles.forEach(v=>{v.update();v.draw();});
+    }
+    animate();
+  })();
+
   </script>
 </body>
 </html>
